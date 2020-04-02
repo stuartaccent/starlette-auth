@@ -1,14 +1,13 @@
 from email.message import EmailMessage
 
 from starlette.requests import Request
-from starlette_core.mail import send_message
 from wtforms import fields, form, validators
 from wtforms.fields.html5 import EmailField
 
-from .exceptions import ImproperlyConfigured
-from .tables import User
-from .tokens import token_generator
-from .utils.http import urlsafe_base64_encode
+from starlette_auth.exceptions import ImproperlyConfigured
+from starlette_auth.tokens import token_generator
+from starlette_auth.utils import db, http
+from starlette_core.mail import send_message
 
 
 class ChangePasswordForm(form.Form):
@@ -43,15 +42,14 @@ class PasswordResetForm(form.Form):
     async def send_email(self, request: Request):
         from . import config
 
-        user = User.query.filter(User.email == self.data["email"]).one_or_none()
-
+        user = await db.get_user_by_email(self.data["email"])
         if not user:
             return
 
         templates = config.templates
         context = {
             "request": request,
-            "uid": urlsafe_base64_encode(bytes(str(user.id), encoding="utf-8")),
+            "uid": http.urlsafe_base64_encode(bytes(str(user["id"]), encoding="utf-8")),
             "user": user,
             "token": token_generator.make_token(user),
         }
@@ -74,7 +72,7 @@ class PasswordResetForm(form.Form):
         body_tmpl = templates.get_template(config.reset_pw_email_template)
         body = body_tmpl.render(context)
 
-        msg["To"] = [user.email]
+        msg["To"] = [user["email"]]
         msg["Subject"] = subject
         msg.set_content(body)
 
@@ -83,7 +81,7 @@ class PasswordResetForm(form.Form):
             html_body = html_body_tmpl.render(context)
             msg.add_alternative(html_body, subtype="html")
 
-        send_message(msg)
+        await send_message(msg)
 
 
 class PasswordResetConfirmForm(form.Form):

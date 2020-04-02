@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from .config import config
-from .utils.crypto import constant_time_compare, salted_hmac
-from .utils.http import base36_to_int, int_to_base36
+from starlette_auth.config import config
+from starlette_auth.utils.crypto import constant_time_compare, salted_hmac
+from starlette_auth.utils.http import base36_to_int, int_to_base36
 
 
 class PasswordResetTokenGenerator:
@@ -75,10 +75,12 @@ class PasswordResetTokenGenerator:
         # database doesn't support microseconds.
         login_timestamp = (
             ""
-            if user.last_login is None
-            else user.last_login.replace(microsecond=0, tzinfo=None)
+            if user["last_login"] is None
+            else user["last_login"].replace(microsecond=0, tzinfo=None)
         )
-        return str(user.id) + user.password + str(login_timestamp) + str(timestamp)
+        return (
+            str(user["id"]) + user["password"] + str(login_timestamp) + str(timestamp)
+        )
 
     def _num_seconds(self, dt):
         return int((dt - datetime(2001, 1, 1)).total_seconds())

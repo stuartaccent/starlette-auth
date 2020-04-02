@@ -55,7 +55,7 @@ setup(
     name=name,
     python_requires=">=3.7",
     version=get_version(package_name),
-    url="https://github.com/accent-starlette/starlette-auth",
+    url="https://github.com/stuartaccent/starlette-auth",
     license="MIT",
     description="Starlette Authentication.",
     long_description=get_long_description(),
@@ -69,7 +69,7 @@ setup(
         'jinja2',
         'python-multipart',
         'sqlalchemy_utils',
-        'starlette-core @ git+https://github.com/accent-starlette/starlette-core@master'
+        'starlette-core @ git+https://github.com/stuartaccent/starlette-core@master',
     ],
     extras_require={
         "docs": [

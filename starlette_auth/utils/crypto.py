@@ -1,6 +1,35 @@
+import binascii
 import hashlib
 import hmac
+import os
 import secrets
+
+
+def check_password(current: str, password: str) -> bool:
+    salt = current[:64]
+    stored_password = current[64:]
+    password_hash = hashlib.pbkdf2_hmac(
+        "sha512", password.encode("utf-8"), salt.encode("ascii"), 100000
+    )
+    password_hash = binascii.hexlify(password_hash).decode("ascii")  # type: ignore
+    return password_hash == stored_password
+
+
+def hash_password(password: str) -> str:
+    salt = hashlib.sha256(os.urandom(60)).hexdigest().encode("ascii")
+    password_hash = hashlib.pbkdf2_hmac(
+        "sha512", password.encode("utf-8"), salt, 100000
+    )
+    password_hash = binascii.hexlify(password_hash)
+    return (salt + password_hash).decode("ascii")
+
+
+def constant_time_compare(val1, val2):
+    """Return True if the two strings are equal, False otherwise."""
+
+    return secrets.compare_digest(
+        bytes(val1, encoding="utf-8"), bytes(val2, encoding="utf-8")
+    )
 
 
 def salted_hmac(key_salt, value, secret):
@@ -24,11 +53,3 @@ def salted_hmac(key_salt, value, secret):
     # the hmac module does the same thing for keys longer than the block size.
     # However, we need to ensure that we *always* do this.
     return hmac.new(key, msg=bytes(value, encoding="utf-8"), digestmod=hashlib.sha1)
-
-
-def constant_time_compare(val1, val2):
-    """Return True if the two strings are equal, False otherwise."""
-
-    return secrets.compare_digest(
-        bytes(val1, encoding="utf-8"), bytes(val2, encoding="utf-8")
-    )

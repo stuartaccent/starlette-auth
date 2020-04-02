@@ -1,6 +1,6 @@
 from starlette.routing import Route, Router
 
-from . import endpoints
+from starlette_auth import endpoints
 
 app = Router(
     [
